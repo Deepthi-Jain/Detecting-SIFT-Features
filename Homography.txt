@@ -1,0 +1,78 @@
+import cv2 
+import numpy as np 
+#Opens the web cam  
+cap = cv2.VideoCapture(0) 
+#A condition is set such that atleast 30 matches are to be there to find the object.  
+#Otherwise show a message saying not enough matches are present. 
+MIN_MATCH_COUNT = 30 
+#method that loads image for processing from the path specified. 
+target = cv2.imread('santa.jpg') 
+ 
+#Construct a kaze object. 
+#Different parameters can be passed to it which are optional.  
+feature_detector = cv2.KAZE_create() 
+#This method detects keypoints and computes the descriptors. 
+#Descriptors describe elementary characteristics such as the shape, the color, the texture or the motion, among others. 
+(tkp,tdes) = feature_detector.detectAndCompute(target,None) 
+FLANN_INDEX_KDTREE = 0 
+#FLANN_INDEX_KDTREE algorithm is used. 
+#Dictionary (key-value) pair is used to search parameters. 
+#For FLANN based matcher, we need to pass two dictionaries which specifies the algorithm to be used.  
+#First one is IndexParams. 
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5) 
+# It specifies the number of times the trees in the index should be recursively traversed.  
+# Higher values gives better precision, but also takes more time. 
+search_params = dict(checks = 50) 
+flann = cv2.FlannBasedMatcher(index_params, search_params) 
+#creates a window that is used as a placeholder for image. 
+cv2.namedWindow("Matches",cv2.WINDOW_AUTOSIZE) 
+while (True): 
+    #reads data from video capture. 
+    ret, query = cap.read() 
+    #resize of the live image fitting it to the frame size as that of target image. 
+ 
+ 
+    frame_width, frame_height, frame_depth = query.shape 
+    #This method detects keypoints and computes the descriptors. 
+    #Descriptors describe elementary characteristics such as the shape, the color, the texture or the motion, among others. 
+    #Query image is the live image that is captured from webcam. 
+    (qkp,qdes) = feature_detector.detectAndCompute(query,None 
+    #match() method to get the best matches in two images. 
+    matches = flann.knnMatch(tdes,qdes,k=2) 
+    # store all the good matches as per Lowe's ratio test. 
+    good = [] 
+    #matches are sorted in ascending order of their distances so that best matches 
+    #(with low distance) come to front.  
+    for m,n in matches: 
+        #if distance i sless then descriptor is appended to array good 
+        if m.distance < 0.7*n.distance: 
+            good.append(m) 
+    #length of good array is compared with min match count defined at the start. 
+    #If it is greater then array is reshaped.   
+    if len(good)>MIN_MATCH_COUNT: 
+        src_pts = np.float32([ tkp[m.queryIdx].pt for m in good ]).reshape(-1,1,2) 
+        dst_pts = np.float32([ qkp[m.trainIdx].pt for m in good ]).reshape(-1,1,2) 
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0) 
+        matchesMask = mask.ravel().tolist() 
+    #If len of good matches is < min match count defined then no enough matches is printed. 
+    else: 
+        print ("Not enough matches: %d/%d" % (len(good),MIN_MATCH_COUNT)) 
+        matchesMask = None 
+    # draw matches in green color (R,G,B) R and B values are set to 0. 
+    draw_params = dict(matchColor = (0,255,0),  
+    singlePointColor = None, 
+    matchesMask = matchesMask, # draw only inliers 
+    flags = 2) 
+    # This method draws matches of keypoints from two images in the output image. 
+    # Match is a line connecting two keypoints (circles). 
+    corr_img = cv2.drawMatches(target,tkp,query,qkp,good,None,**draw_params) 
+
+ 
+    corr_img = cv2.resize(corr_img, (0,0), fx=0.5, fy=0.5) 
+    cv2.imshow("Matches",corr_img) 
+    if cv2.waitKey(1) & 0xFF == ord('q'): 
+        break 
+ 
+# FLANN stands for Fast Library for Approximate Nearest Neighbors.  
+# It contains a collection of algorithms optimized for fast nearest neighbor search in large datasets and for high dimensional features.  
+# It works more faster than BFMatcher for large datasets. 

@@ -1,0 +1,35 @@
+import cv2 
+import numpy as np 
+#method that loads image for processing from the path specified. 
+img = cv2.imread('santa.jpg')  
+#method used to convert image from one color space to other color space. 
+#img is the source image that is loaded and gray is the converted image. 
+#In this case image is converted from BGR colorspace to Gray space. 
+gray= cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)  
+#Construct a kaze object. 
+#Different parameters can be passed to it which are optional.  
+feature_detector =  cv2.KAZE_create() 
+#This method is used to find key points(special structures with many attributes) in an image.   
+kp = feature_detector.detect(gray,None) 
+#Function that draws small circles around the detected keypoints. 
+#The parameters passed are only the input image and the detected keypoints.  
+vis = cv2.drawKeypoints(img, kp, None) 
+#This method is used to write the resultant image into the specified location. 
+cv2.imwrite('Features.jpg', vis) 
+#imshow method is used to display an image in a window.  
+#This function is followed by waitKey function which displays the image for specified milliseconds. 
+cv2.imshow("Features", vis) 
+cv2.waitKey(0) 
+#Function that draws small circles around the detected keypoints. 
+#Flag value is passed to this function which will draw a circle with size of keypoint and it will even show its orientation. 
+vis = cv2.drawKeypoints(img, kp, None,flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS) 
+#This method is used to write the resultant image into the specified location. 
+cv2.imwrite('Features2.jpg', vis) 
+#imshow method is used to display an image in a window.  
+#This function is followed by waitKey function which displays the image for specified milliseconds. 
+cv2.imshow("Features2", vis) 
+cv2.waitKey(0) 
+
+
+
+

@@ -1,0 +1,44 @@
+import cv2 
+import numpy as np 
+#method that loads image for processing from the path specified. 
+#target image is the image that needs to be matched with the query image that conatins the target image in different orientation. 
+target = cv2.imread('target.jpg') 
+#Construct a kaze object. 
+#Different parameters can be passed to it which are optional.  
+feature_detector = cv2.KAZE_create() 
+#This method detects keypoints and computes the descriptors. 
+#Descriptors describe elementary characteristics such as the shape, the color, the texture or the motion, among others. 
+(tkp,tdes) = feature_detector.detectAndCompute(target,None) 
+#method that loads image for processing from the path specified. 
+#query image is the image that conatins the target image with different orientation. 
+query = cv2.imread('query.jpg') 
+#query image is resized so that the image size is within the memory size  
+#query=cv2.resize(query, (0,0), fx=0.5,fy=0.5) 
+5 
+ 
+#This method detects keypoints and computes the descriptors. 
+#Descriptors describe elementary characteristics such as the shape, the color, the texture or the motion, among others. 
+(qkp,qdes) = feature_detector.detectAndCompute(query,None) 
+#Object of BFMatcher is created. 
+#It takes 2 parameters distance measurement and crosscheck. 
+#defaultNorm is prefered as SIFT descriptors are being used. 
+#crossCheck==true, then the knnMatch() method is used and the BFMatcher will only return consistent pairs. 
+bf = cv2.BFMatcher(feature_detector.defaultNorm(), crossCheck=True) 
+#match() method to get the best matches in two images. 
+#matches are sorted in ascending order of their distances so that best matches (with low distance) come to front. 
+matches = bf.match(qdes,tdes) 
+# This method draws matches of keypoints from two images in the output image. 
+# Match is a line connecting two keypoints (circles). 
+vis = cv2.drawMatches(query,qkp,target,tkp,matches,None) 
+#creates a window that is used as a placeholder for image.  
+cv2.namedWindow("Features",cv2.WINDOW_AUTOSIZE) 
+ 
+# The input image is quite large, so we can resize it 
+# to fit within the screen 
+vis = cv2.resize(vis, (0,0), fx=0.5,fy=0.5) 
+#This method is used to write the resultant image into the specified location. 
+cv2.imwrite('Features4.jpg', vis) 
+#imshow method is used to display an image in a window.  
+#This function is followed by waitKey function which displays the image for specified milliseconds. 
+cv2.imshow("Features",vis) 
+cv2.waitKey(0) 
